@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Software Engineer - TechCorp</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .job-title { color: #333; margin-bottom: 10px; }
+        .company-name { color: #666; font-size: 18px; margin-bottom: 10px; }
+        .job-location { color: #888; margin-bottom: 20px; }
+        .job-description { margin-bottom: 20px; }
+        .apply-button { 
+            background-color: #007cba; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+        }
+        .apply-button:hover { background-color: #005a87; }
+        .job-ref { 
+            background-color: #f0f0f0; 
+            padding: 10px; 
+            border-radius: 4px; 
+            margin: 10px 0; 
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h class="job-title">Senior Software Engineer</h>
+    <div class="company-name">TechCorp Inc.</div>
+    <div class="job-location">San Francisco, CA</div>
+    
+    <div class="job-ref">
+        <strong>Job Reference:</strong> REF-2024-001 - Senior Software Engineer Position
+    </div>
+    
+    <div class="job-description">
+        <p>We are looking for a talented Senior Software Engineer to join our team...</p>
+        <p>Requirements:</p>
+        <ul>
+            <li>5+ years of experience</li>
+            <li>Proficiency in JavaScript, Python</li>
+            <li>Experience with cloud platforms</li>
+        </ul>
+    </div>
+    <button class="apply-button">Apply Now</button>
+    
+    <div style="margin-top: 40px; padding: 20px; background-color: #f0f0f0; border-radius: 4px;">
+        <h3>Test the Extension:</h3>
+        <p>1. Load the Job Application Tracker extension in Firefox</p>
+        <p>2. Click the extension icon in your toolbar</p>
+        <p>3. Click "Quick Add Current Job" to automatically add this job posting</p>
+        <p>4. The extension should detect:</p>
+        <ul>
+            <li><strong>Job Title:</strong> "Senior Software Engineer" (from h.job-title)</li>
+            <li><strong>Company:</strong> "TechCorp Inc." (from .company-name)</li>
+            <li><strong>Location:</strong> "San Francisco, CA" (from .job-location)</li>
+        </ul>
+        <p>5. If company name wasn't found, it would fallback to extracting "Senior Software Engineer Position" from the job reference number</p>
+    </div>
+</body>
+</html>

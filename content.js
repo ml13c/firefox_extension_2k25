@@ -22,6 +22,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 // Extract job title from common selectors
 function extractJobTitle() {
   const selectors = [
+    'h.job-title',  // Primary selector as requested
     'h1[class*="job"]',
     'h1[class*="title"]',
     '.job-title',
@@ -63,8 +64,59 @@ function extractCompanyName() {
     }
   }
   
-  // Fallback to domain name
+  // Fallback: look for job reference number and extract position name
+  const jobRef = extractJobReferenceNumber();
+  if (jobRef) {
+    return jobRef;
+  }
+  
+  // Final fallback to domain name
   return window.location.hostname.replace('www.', '').split('.')[0];
+}
+
+// Extract job reference number and position name
+function extractJobReferenceNumber() {
+  // Look for common job reference patterns
+  const jobRefSelectors = [
+    '[class*="job-ref"]',
+    '[class*="job-id"]',
+    '[class*="reference"]',
+    '[class*="req-id"]',
+    '[class*="position-id"]',
+    '[data-testid*="job-ref"]',
+    '[data-testid*="job-id"]'
+  ];
+  
+  for (const selector of jobRefSelectors) {
+    const element = document.querySelector(selector);
+    if (element && element.textContent.trim()) {
+      const text = element.textContent.trim();
+      // Extract position name from job reference (usually after a dash or colon)
+      const match = text.match(/(?:ref|id|#)[\s:]*[\w-]+[\s-]+(.+)/i);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+      // If no clear pattern, return the whole text
+      return text;
+    }
+  }
+  
+  // Look in page text for job reference patterns
+  const pageText = document.body.textContent;
+  const patterns = [
+    /job\s*ref(?:erence)?[\s:]*[\w-]+[\s-]+(.+)/i,
+    /position\s*id[\s:]*[\w-]+[\s-]+(.+)/i,
+    /req(?:uest)?\s*id[\s:]*[\w-]+[\s-]+(.+)/i
+  ];
+  
+  for (const pattern of patterns) {
+    const match = pageText.match(pattern);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+  }
+  
+  return null;
 }
 
 // Extract job location from common selectors
