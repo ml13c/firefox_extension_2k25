@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const form = document.getElementById('applicationForm');
   const applicationsList = document.getElementById('applicationsList');
   const exportBtn = document.getElementById('exportBtn');
+  const quickAddBtn = document.getElementById('quickAddBtn');
   
   // Set today's date as default
   document.getElementById('applicationDate').valueAsDate = new Date();
@@ -10,8 +11,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // Load applications on popup open
   loadApplications();
   
-  // Try to auto-fill company name from current tab
-  autoFillCompanyName();
+  // Try to auto-fill form data from current tab
+  autoFillFormData();
   
   // Handle form submission
   form.addEventListener('submit', function(e) {
@@ -41,8 +42,31 @@ document.addEventListener('DOMContentLoaded', function() {
     exportToCSV();
   });
   
-  // Auto-fill company name from current tab
-  function autoFillCompanyName() {
+  // Handle quick add button
+  quickAddBtn.addEventListener('click', function() {
+    quickAddCurrentJob();
+  });
+  
+  // Auto-fill form data from current tab
+  function autoFillFormData() {
+    // First try to get auto-filled data from background script
+    chrome.runtime.sendMessage({action: 'getAutoFillData'}, function(response) {
+      if (response.data) {
+        // Use the auto-filled data from the content script
+        document.getElementById('companyName').value = response.data.companyName || '';
+        document.getElementById('jobLocation').value = response.data.jobLocation || '';
+        
+        // Show a notification that data was auto-filled
+        showAutoFillNotification(response.data);
+      } else {
+        // Fallback to basic domain-based auto-fill
+        autoFillFromDomain();
+      }
+    });
+  }
+  
+  // Fallback auto-fill from domain name
+  function autoFillFromDomain() {
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
       if (tabs[0]) {
         const url = tabs[0].url;
@@ -59,6 +83,123 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
     });
+  }
+  
+  // Show notification when data is auto-filled
+  function showAutoFillNotification(data) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #4CAF50;
+      color: white;
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      z-index: 1000;
+      max-width: 200px;
+    `;
+    notification.innerHTML = `
+      <strong>Auto-filled from job page:</strong><br>
+      Company: ${data.companyName}<br>
+      Location: ${data.jobLocation || 'Not detected'}
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remove notification after 3 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 3000);
+  }
+  
+  // Quick add current job application
+  function quickAddCurrentJob() {
+    chrome.runtime.sendMessage({action: 'getAutoFillData'}, function(response) {
+      if (response.data) {
+        // Use the auto-filled data to create an application
+        const application = {
+          id: Date.now(),
+          companyName: response.data.companyName,
+          applicationDate: new Date().toISOString().split('T')[0],
+          jobLocation: response.data.jobLocation || '',
+          status: 'pending' // Default to pending
+        };
+        
+        // Save application
+        saveApplication(application);
+        
+        // Show success notification
+        showSuccessNotification(application);
+        
+        // Reload applications list
+        loadApplications();
+      } else {
+        // No auto-fill data available, show error
+        showErrorNotification('No job data detected on current page. Please fill the form manually.');
+      }
+    });
+  }
+  
+  // Show success notification
+  function showSuccessNotification(application) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #4CAF50;
+      color: white;
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      z-index: 1000;
+      max-width: 200px;
+    `;
+    notification.innerHTML = `
+      <strong>Application Added!</strong><br>
+      Company: ${application.companyName}<br>
+      Status: Pending
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remove notification after 3 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 3000);
+  }
+  
+  // Show error notification
+  function showErrorNotification(message) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #f44336;
+      color: white;
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      z-index: 1000;
+      max-width: 200px;
+    `;
+    notification.innerHTML = message;
+    
+    document.body.appendChild(notification);
+    
+    // Remove notification after 5 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 5000);
   }
   
   // Load applications from storage
