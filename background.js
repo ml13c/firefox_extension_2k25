@@ -41,4 +41,26 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     });
     return true;
   }
+  
+  if (request.action === 'autoFillJobData') {
+    // Store the auto-filled job data for the popup to use
+    chrome.storage.local.set({ 
+      autoFillData: request.data,
+      autoFillTimestamp: Date.now()
+    });
+    return true;
+  }
+  
+  if (request.action === 'getAutoFillData') {
+    chrome.storage.local.get(['autoFillData', 'autoFillTimestamp'], function(result) {
+      // Only return data if it's less than 5 minutes old
+      const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+      if (result.autoFillTimestamp && result.autoFillTimestamp > fiveMinutesAgo) {
+        sendResponse({data: result.autoFillData});
+      } else {
+        sendResponse({data: null});
+      }
+    });
+    return true;
+  }
 });
