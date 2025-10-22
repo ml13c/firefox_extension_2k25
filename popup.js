@@ -26,15 +26,15 @@ document.addEventListener('DOMContentLoaded', function() {
       status: document.getElementById('status').value
     };
     
-    // Save application
-    saveApplication(application);
-    
-    // Clear form
-    form.reset();
-    document.getElementById('applicationDate').valueAsDate = new Date();
-    
-    // Reload applications list
-    loadApplications();
+    // Save application and reload UI when done
+    saveApplication(application, function() {
+      // Clear form
+      form.reset();
+      document.getElementById('applicationDate').valueAsDate = new Date();
+      
+      // Reload applications list
+      loadApplications();
+    });
   });
   
   // Handle export button
@@ -137,14 +137,14 @@ document.addEventListener('DOMContentLoaded', function() {
           status: 'pending' // Default to pending
         };
         
-        // Save application
-        saveApplication(application);
-        
-        // Show success notification
-        showSuccessNotification(application);
-        
-        // Reload applications list
-        loadApplications();
+        // Save application and update UI when done
+        saveApplication(application, function() {
+          // Show success notification
+          showSuccessNotification(application);
+          
+          // Reload applications list
+          loadApplications();
+        });
       } else {
         // No auto-fill data available, show error
         showErrorNotification('No job data detected on current page. Please fill the form manually.');
@@ -251,13 +251,16 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // Save application to storage
-  function saveApplication(application) {
+  function saveApplication(application, callback) {
     chrome.storage.local.get(['applications'], function(result) {
       const applications = result.applications || [];
       applications.push(application);
       
       chrome.storage.local.set({ applications: applications }, function() {
         console.log('Application saved');
+        if (callback) {
+          callback();
+        }
       });
     });
   }
@@ -269,6 +272,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const filteredApplications = applications.filter(app => app.id !== id);
       
       chrome.storage.local.set({ applications: filteredApplications }, function() {
+        console.log('Application deleted');
         loadApplications();
       });
     });
