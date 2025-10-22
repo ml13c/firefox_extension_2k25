@@ -47,6 +47,14 @@ document.addEventListener('DOMContentLoaded', function() {
     quickAddCurrentJob();
   });
   
+  // Handle delete button clicks using event delegation
+  applicationsList.addEventListener('click', function(e) {
+    if (e.target.classList.contains('delete-btn')) {
+      const appId = parseInt(e.target.getAttribute('data-app-id'));
+      deleteApplication(appId);
+    }
+  });
+  
   // Auto-fill form data from current tab
   function autoFillFormData() {
     // First try to get auto-filled data from background script
@@ -225,6 +233,7 @@ document.addEventListener('DOMContentLoaded', function() {
     applications.forEach(app => {
       const appDiv = document.createElement('div');
       appDiv.className = 'application-item';
+      appDiv.setAttribute('data-app-id', app.id);
       
       const statusClass = `status-${app.status}`;
       const statusText = app.status.charAt(0).toUpperCase() + app.status.slice(1);
@@ -234,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <p><strong>Date:</strong> ${formatDate(app.applicationDate)}</p>
         <p><strong>Location:</strong> ${app.jobLocation || 'Not specified'}</p>
         <p><strong>Status:</strong> <span class="status-badge ${statusClass}">${statusText}</span></p>
-        <button onclick="deleteApplication(${app.id})" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; margin-top: 5px;">Delete</button>
+        <button class="delete-btn" data-app-id="${app.id}" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; margin-top: 5px;">Delete</button>
       `;
       
       applicationsList.appendChild(appDiv);
@@ -254,7 +263,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // Delete application
-  window.deleteApplication = function(id) {
+  function deleteApplication(id) {
     chrome.storage.local.get(['applications'], function(result) {
       const applications = result.applications || [];
       const filteredApplications = applications.filter(app => app.id !== id);
@@ -263,7 +272,7 @@ document.addEventListener('DOMContentLoaded', function() {
         loadApplications();
       });
     });
-  };
+  }
   
   // Export to CSV
   function exportToCSV() {
